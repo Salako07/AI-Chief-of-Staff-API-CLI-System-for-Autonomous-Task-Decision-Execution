@@ -1,7 +1,9 @@
 import argparse
+import os
+import sys
 from app.services.processor import AIChiefOfStaffProcessor
-
-
+from app.llm.openai_llm import OpenAILLM
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 def main():
     parser = argparse.ArgumentParser(description="AI Chief of Staff CLI")
 
@@ -9,7 +11,7 @@ def main():
 
     args = parser.parse_args()
 
-    llm = None  # Initialize your LLM here
+    llm = OpenAILLM(model = "gpt-4o-mini")  # Initialize your LLM here
     tools = None  # Initialize your tools here
     db = None  # Initialize your database here
 
