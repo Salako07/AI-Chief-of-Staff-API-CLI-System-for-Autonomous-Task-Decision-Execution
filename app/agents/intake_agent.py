@@ -8,7 +8,7 @@ def create_intake_agent(llm):
             "You are responsible for cleaning and structuring messy business inputs such as emails, "
             "meeting notes, and transcripts. You remove noise, organize information, and preserve meaning."
         ),
-        verbose=True,
+        verbose=False,
         allow_delegation=False,
         llm=llm,
         instructions=(
