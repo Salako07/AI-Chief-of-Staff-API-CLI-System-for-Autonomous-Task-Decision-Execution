@@ -13,6 +13,11 @@ from datetime import datetime, timezone
 from pydantic import ValidationError
 from typing import List
 
+from app.services.util import build_canonical_state
+from app.execution.planner import ExecutionPlanner
+from app.execution.idempotency import ExecutionStore
+from app.execution.engine import ExecutionEngine, ActionExecutor
+
 logger = logging.getLogger(__name__)
 
 # Quality control constants
@@ -164,6 +169,31 @@ class AIChiefOfStaffProcessor:
         self.summary_agent = create_summary_agent(llm)
         self.critic_agent = create_critic_agent(llm)
 
+        # Initialize execution layer
+        # Try PostgreSQL first, fallback to SQLite
+        try:
+            from app.execution.idempotency_pg import PostgreSQLExecutionStore
+            database_url = os.getenv("DATABASE_URL")
+            if database_url:
+                self.execution_store = PostgreSQLExecutionStore(database_url=database_url)
+                logger.info("[PROCESSOR] Using PostgreSQL for execution store")
+            else:
+                raise ValueError("DATABASE_URL not set")
+        except Exception as e:
+            logger.warning(f"[PROCESSOR] PostgreSQL unavailable, using SQLite fallback: {e}")
+            from app.execution.idempotency import ExecutionStore
+            self.execution_store = ExecutionStore(db_path="execution_log.db")
+
+        self.execution_planner = ExecutionPlanner(
+            slack_target="#ops-channel",
+            alerts_target="#alerts"
+        )
+        self.action_executor = ActionExecutor(slack_webhook_url=slack_webhook_url)
+        self.execution_engine = ExecutionEngine(
+            store=self.execution_store,
+            executor=self.action_executor
+        )
+
 
     def process_input(self, text: str, max_retries: int = 2) -> OutputSchema:
         """
@@ -268,7 +298,7 @@ class AIChiefOfStaffProcessor:
             "decisions": decisions,
             "risks": risks
         }
-
+        state = build_canonical_state(state)
         # Step 3: Critic refinement loop (smart loop with improvement detection)
         logger.info(f"[{run_id}] Running critic agent (max 2 iterations)")
         for iteration in range(2):
@@ -411,6 +441,27 @@ class AIChiefOfStaffProcessor:
         )
 
         logger.info(f"[{run_id}] Processing complete")
+
+        # Step 6: Enqueue for async execution (Celery + Redis)
+        # This prevents Slack/Email delays from blocking API response
+        logger.info(f"[{run_id}] Enqueuing execution job")
+        try:
+            from app.services.queue import enqueue_job
+
+            # Serialize OutputSchema for Celery (JSON-only)
+            job_data = {
+                "run_id": run_id,
+                "output": final_output.model_dump(),  # Pydantic v2 serialization
+                "slack_webhook_url": self.slack_webhook_url
+            }
+
+            task_id = enqueue_job(job_data)
+            logger.info(f"[{run_id}] Execution job enqueued: task_id={task_id}")
+
+        except Exception as e:
+            logger.error(f"[{run_id}] Failed to enqueue execution job: {e}")
+            # Don't fail the entire pipeline if queue fails
+
         return final_output
 
     def _send_slack_notification(self, result: OutputSchema, run_id: str):

@@ -212,3 +212,114 @@ vvv/
 slack_message*
 test_slack.py
 .claude/
+
+
+python -m cli.main --text "Zoom Meeting Transcript Meeting ID: 812-339-221Topic: AI Data Pipeline – Identity Resolution Sync: 2026-04-1Duration: 00:20:0000:00:01 Mei: Alright, let’s get started. We’ve got 20 minutes. Goal today is unblock identity resolution, review ingestion pipeline issues, and finalize what we ship this sprint.00:00:12 Alex: Yeah, keep it tight. We’ve been looping on the same problems for a week.
+
+00:00:20 Mei:Olamide, you flagged something critical in Slack about entity duplication. Start there.
+
+00:00:33 Olamide: Yeah. The issue isn’t just duplication—it’s inconsistent entity merging logic across sources.
+
+00:00:45 Olamide: Source A uses fuzzy matching. Source B uses exact ID mapping. Source C has no normalization layer.
+
+00:01:05 Olamide: So we’re ending up with the same entity appearing as 3–5 different nodes in the graph.
+
+00:01:18 Daniel: That’s expected if we don’t enforce a canonical ID layer.
+
+00:01:25 Olamide: Exactly. But right now we’re trying to fix it downstream instead of stopping it at ingestion.
+
+00:01:40 Alex: So what are you proposing? Another service?
+
+00:01:47 Olamide: Not another service. A strict identity resolution gate at ingestion time.
+
+00:02:00 Olamide: Every incoming entity must pass through normalization, embedding generation, candidate match lookup, and confidence scoring threshold.
+
+00:02:25 Olamide: If confidence < threshold, create new node. If >= threshold, merge into canonical ID.
+
+00:02:40 Sam: That sounds expensive. Embedding every entity in real time?
+
+00:02:55 Olamide: It’s already expensive—we’re just hiding it in downstream reconciliation jobs.
+
+00:03:10 Mei: What’s the impact if we don’t fix this now?
+
+00:03:18 Olamide: Search relevance degrades, scoring becomes unreliable, and the knowledge graph becomes structurally untrustworthy within weeks at scale.
+
+00:03:40 Alex: That’s a strong claim.
+
+00:03:45 Olamide: It’s already happening in staging data.
+
+00:04:10 Sam: We could batch identity resolution every 6 hours instead of real time.
+
+00:04:20 Olamide: That makes the graph a delayed truth system. Anything real time becomes wrong by default.
+
+00:04:45 Daniel: But real-time resolution introduces latency overhead.
+
+00:04:55 Olamide: We can mitigate with Redis caching, precomputed embeddings, and approximate nearest neighbor search.
+
+00:05:20 Alex: So hybrid resolution?
+
+00:05:25 Olamide: Yes. But ingestion must never accept unresolved raw identity into the graph.
+
+00:05:50 Mei: I like that principle.
+
+00:06:10 Daniel: Separate issue—Twitter API ingestion fails intermittently and retries are duplicating records.
+
+00:06:25 Olamide: That’s because retry logic is blind. We’re retrying without idempotency keys.
+
+00:06:40 Sam: We do have request IDs.
+
+00:06:45 Olamide: Not propagated into storage layer. So retries create duplicate ingestion events.
+
+00:07:10 Sam: That’s a bug in the queue worker.
+
+00:07:15 Olamide: Yes—and it compounds identity resolution problems.
+
+00:07:40 Mei: What’s the priority fix?
+
+00:07:45 Olamide: First idempotency in queue, second ingestion gating, third dedup backfill job.
+
+00:08:30 Mei: We need to show progress to stakeholders next week.
+
+00:08:40 Alex: We can’t show a broken graph.
+
+00:08:45 Sam: We could abstract it in dashboards.
+
+00:08:50 Olamide: That hides the issue instead of fixing it.
+
+00:09:05 Mei: What do we show then?
+
+00:09:10 Olamide: Clean identity resolution pipeline, duplication reduction metrics, stable ingestion logs—even if partial coverage.
+
+00:09:35 Alex: That works as MVP scope.
+
+00:10:10 Alex: Do we adopt ingestion identity gate?
+
+00:10:15 Sam: Need benchmarks.
+
+00:10:20 Daniel: Same concern.
+
+00:10:25 Olamide: I can prototype in 48 hours using FAISS similarity search, cosine threshold tuning, and Redis cache layer.
+
+00:10:50 Mei: Can it be done in two days?
+
+00:10:55 Olamide: Yes, if we stop parallel low-impact work.
+
+00:11:20 Alex: That’s noted.
+
+00:11:45 Mei: Decision: Olamide prototype ingestion identity gate. Daniel fixes idempotency. Sam patches queue worker. Priya reviews embedding consistency.
+
+00:12:10 Alex: No side experiments this week.
+
+00:12:15 Olamide: Agreed.
+
+00:12:40 Mei: Next check-in Friday. We expect measurable progress.
+
+00:13:00 Alex: No more duplicate entity issues in staging.
+
+00:13:10 Olamide: If implemented correctly, duplication becomes a non-issue.
+
+00:13:25 Sam: We’ll validate that.
+
+00:13:40 Mei: Meeting closed.
+
+00:20:00 End of recording."
