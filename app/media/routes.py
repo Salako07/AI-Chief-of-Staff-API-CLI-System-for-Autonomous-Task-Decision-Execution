@@ -26,8 +26,8 @@ storage = get_media_storage()
 UPLOAD_DIR = os.getenv("MEDIA_UPLOAD_DIR", "/tmp/media_uploads")
 MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB
 ALLOWED_MIME_TYPES = [
-    "audio/mpeg", "audio/mp3", "audio/wav", "audio/m4a", "audio/mp4", "audio/ogg",
-    "video/mp4", "video/mpeg", "video/quicktime", "video/x-msvideo"
+    "audio/mpeg", "audio/mp3", "audio/wav", "audio/m4a", "audio/x-m4a", "audio/mp4", "audio/ogg",
+    "video/mp4", "video/mpeg", "video/quicktime", "video/x-msvideo", "video/x-matroska"
 ]
 
 
