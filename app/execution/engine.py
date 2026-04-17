@@ -62,21 +62,16 @@ class ActionExecutor:
             )
 
         try:
-            # Format simple message (title + key details)
-            message = self._format_slack_message(action)
-
-            # Send to Slack
-            result = self.slack_tool.send_message(message)
-
+            # Skip individual Slack notifications - summary is sent by processor
             duration_ms = int((time.time() - start_time) * 1000)
 
-            logger.info(f"[EXECUTOR] Slack action executed: {action.id[:20]}... (target: {action.target}, {duration_ms}ms)")
+            logger.info(f"[EXECUTOR] Slack action skipped (summary notification only): {action.id[:20]}... (target: {action.target}, {duration_ms}ms)")
 
             return ExecutionResult(
                 action_id=action.id,
                 action_type="slack",
                 success=True,
-                status="executed",
+                status="skipped",
                 duration_ms=duration_ms
             )
 

@@ -253,20 +253,38 @@ curl -X POST http://localhost:8000/api/v1/process \
 
 ## Architecture Overview
 
+### How It Works
+
+When you send a message to AI Chief of Staff, here's what happens behind the scenes:
+
 ```
-User Input (Email, Notes, Chat)
-         ↓
-   AI Processing Pipeline
-   ├── Intake & Normalization
-   ├── Parallel Extraction (Tasks, Decisions, Risks)
-   ├── Quality Validation
-   ├── Deduplication
-   └── Summary Generation
-         ↓
-  Structured JSON Output
-         ↓
-  Your Systems (Jira, Asana, etc.)
+Your Message
+    ↓
+[API Server] ← Receives your request
+    ↓
+[Redis Queue] ← Queues the work
+    ↓
+[Background Worker] ← Processes with AI agents
+    ↓
+[PostgreSQL Database] ← Saves results
+    ↓
+Results Delivered
 ```
+
+**The System Components:**
+
+- **API Server** - The front door where you send requests
+- **Redis** - The work queue that manages incoming jobs
+- **Background Worker** - The AI processing engine that extracts tasks, decisions, and risks
+- **PostgreSQL** - Permanent storage for all processed data
+- **Monitoring Dashboard** - Live view of all processing jobs
+
+**Why This Design?**
+
+- **Fast Response** - API returns immediately, processing happens in background
+- **Never Loses Work** - Redis queue ensures nothing is dropped
+- **Prevents Duplicates** - Database tracks what's already been processed
+- **Easy to Scale** - Add more workers when you need more processing power
 
 ---
 

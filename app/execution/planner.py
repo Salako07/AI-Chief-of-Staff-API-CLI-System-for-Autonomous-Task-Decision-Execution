@@ -88,6 +88,9 @@ class ExecutionPlanner:
         """
         Build deterministic actions from canonical state.
 
+        NOTE: Slack notifications are handled by processor.py to avoid duplication.
+        This planner is reserved for future integrations (email, Notion, webhooks).
+
         Args:
             output: Validated OutputSchema with tasks, decisions, risks
             run_id: Processing run ID for traceability
@@ -99,64 +102,15 @@ class ExecutionPlanner:
 
         logger.info(f"[{run_id}] Building actions from state: {len(output.tasks)} tasks, {len(output.decisions)} decisions, {len(output.risks)} risks")
 
-        # RULE 1: Tasks → Slack notifications
-        for task in output.tasks:
-            # Use task TITLE as deterministic key (not auto-generated UUID)
-            action_id = generate_action_id("slack", "task", task.title, self.slack_target)
+        # Slack notifications disabled - processor.py sends consolidated summary
+        # This prevents notification spam (individual messages per task/decision)
 
-            actions.append(Action(
-                id=action_id,
-                type="slack",
-                title=f"Task Assigned: {task.title}",
-                payload={
-                    "id": task.id,
-                    "title": task.title,
-                    "owner": task.owner,
-                    "deadline": task.deadline,
-                    "priority": task.priority,
-                    "status": task.status
-                },
-                target=self.slack_target
-            ))
+        # Future: Add email, Notion, webhook actions here
+        # Example:
+        # if email_enabled:
+        #     actions.append(Action(type="email", ...))
 
-        # RULE 2: Decisions → Slack notifications
-        for decision in output.decisions:
-            # Use decision TEXT as deterministic key (not auto-generated UUID)
-            action_id = generate_action_id("slack", "decision", decision.decision, self.slack_target)
-
-            actions.append(Action(
-                id=action_id,
-                type="slack",
-                title=f"Decision Made: {decision.decision}",
-                payload={
-                    "id": decision.id,
-                    "decision": decision.decision,
-                    "made_by": decision.made_by,
-                    "timestamp": str(decision.timestamp)
-                },
-                target=self.slack_target
-            ))
-
-        # RULE 3: High-severity risks → Slack alerts
-        for risk in output.risks:
-            if risk.severity == "high":
-                # Use risk TEXT as deterministic key (not auto-generated UUID)
-                action_id = generate_action_id("slack", "risk", risk.risk, self.alerts_target)
-
-                actions.append(Action(
-                    id=action_id,
-                    type="slack",
-                    title=f"🚨 HIGH RISK: {risk.risk}",
-                    payload={
-                        "id": risk.id,
-                        "risk": risk.risk,
-                        "severity": risk.severity,
-                        "mitigation": risk.mitigation
-                    },
-                    target=self.alerts_target
-                ))
-
-        logger.info(f"[{run_id}] Generated {len(actions)} actions")
+        logger.info(f"[{run_id}] Generated {len(actions)} actions (Slack disabled - using processor summary)")
 
         return actions
 
