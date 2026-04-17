@@ -520,7 +520,7 @@ export default function UploadPage() {
         <div className="container-custom">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-gray-500 mb-4 md:mb-0">
-              © 2026 AI Chief of Staff. Built with Next.js & FastAPI.
+              © 2026 AI Chief of Staff. Built by <span className="text-[#E82127] font-semibold">Salako Olamide</span>
             </div>
             <div className="flex gap-6">
               <Link href="/" className="text-gray-500 hover:text-white transition-colors">

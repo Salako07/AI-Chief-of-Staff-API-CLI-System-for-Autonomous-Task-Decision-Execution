@@ -262,9 +262,12 @@ export default function Home() {
 
             <Card hover>
               <div className="text-4xl mb-4">🔗</div>
-              <h3 className="text-xl font-semibold mb-3">Easy Integration</h3>
-              <p className="text-gray-400">
-                RESTful API with OpenAPI docs. Integrate with Slack, webhooks, or your custom workflow.
+              <h3 className="text-xl font-semibold mb-3">Powerful Integrations</h3>
+              <p className="text-gray-400 mb-3">
+                Connect your entire workflow: <span className="text-white font-medium">Zoom → Slack</span>, <span className="text-white font-medium">Google Meet → Notion</span>, and more.
+              </p>
+              <p className="text-sm text-gray-500">
+                RESTful API • Webhooks • Real-time notifications
               </p>
             </Card>
 
@@ -323,7 +326,7 @@ export default function Home() {
         <div className="container-custom">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-gray-500 mb-4 md:mb-0">
-              © 2026 AI Chief of Staff. Built with Next.js & FastAPI.
+              © 2026 AI Chief of Staff. Built by <span className="text-[#E82127] font-semibold">Salako Olamide</span>
             </div>
             <div className="flex gap-6">
               <a href="http://localhost:8000/docs" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white transition-colors">
