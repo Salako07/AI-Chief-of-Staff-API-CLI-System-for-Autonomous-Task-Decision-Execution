@@ -4,6 +4,7 @@ FastAPI application entry point for AI Chief of Staff API.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import router
+from app.media.routes import router as media_router
 import logging
 
 # Configure logging
@@ -33,6 +34,7 @@ app.add_middleware(
 
 # Include API routes
 app.include_router(router, prefix="/api/v1", tags=["processing"])
+app.include_router(media_router, tags=["media"])
 
 # Root endpoint
 @app.get("/")

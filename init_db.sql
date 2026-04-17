@@ -1,6 +1,9 @@
 -- AI Chief of Staff - PostgreSQL Schema
 -- Persistent idempotency and audit logs
 
+-- Ensure UUID generation support
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
 -- ============================================================================
 -- EXECUTION LOG TABLE (Idempotency + Audit Trail)
 -- ============================================================================
@@ -101,6 +104,48 @@ CREATE TABLE IF NOT EXISTS risks (
 CREATE INDEX IF NOT EXISTS idx_risks_run_id ON risks(run_id);
 CREATE INDEX IF NOT EXISTS idx_risks_severity ON risks(severity);
 CREATE INDEX IF NOT EXISTS idx_risks_created_at ON risks(created_at DESC);
+
+-- ============================================================================
+-- MEDIA PROCESSING TABLES (Uploads + Transcription Jobs)
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS media_files (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    filename VARCHAR(255) NOT NULL,
+    original_path VARCHAR(500) NOT NULL,
+    mime_type VARCHAR(100) NOT NULL,
+    size_bytes BIGINT NOT NULL,
+    duration_seconds INTEGER,
+    status VARCHAR(50) NOT NULL CHECK(status IN ('uploaded', 'processing', 'completed', 'failed')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_media_files_status ON media_files(status);
+CREATE INDEX IF NOT EXISTS idx_media_files_created_at ON media_files(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS transcription_jobs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    media_id UUID NOT NULL REFERENCES media_files(id) ON DELETE CASCADE,
+    run_id UUID,
+    status VARCHAR(50) NOT NULL CHECK(status IN ('queued', 'processing', 'completed', 'failed')),
+    progress INTEGER DEFAULT 0,
+    transcription TEXT,
+    tasks JSONB,
+    decisions JSONB,
+    risks JSONB,
+    summary TEXT,
+    error_message TEXT,
+    processing_time_ms INTEGER,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    started_at TIMESTAMP WITH TIME ZONE,
+    completed_at TIMESTAMP WITH TIME ZONE,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_transcription_jobs_media_id ON transcription_jobs(media_id);
+CREATE INDEX IF NOT EXISTS idx_transcription_jobs_status ON transcription_jobs(status);
+CREATE INDEX IF NOT EXISTS idx_transcription_jobs_created_at ON transcription_jobs(created_at DESC);
 
 -- ============================================================================
 -- ANALYTICS VIEWS

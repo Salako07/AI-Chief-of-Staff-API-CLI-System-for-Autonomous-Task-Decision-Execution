@@ -9,6 +9,7 @@ from app.schemas.output_schema import TaskList, DecisionList, RiskList, OutputSc
 import json
 import uuid
 import logging
+import os
 from datetime import datetime, timezone
 from pydantic import ValidationError
 from typing import List
@@ -157,10 +158,11 @@ def compute_quality_score(tasks: List[Task], decisions: List[Decision], risks: L
 
 class AIChiefOfStaffProcessor:
     def __init__(self, llm, tools, db, slack_webhook_url: str = None):
+        import os
         self.llm = llm
         self.tools = tools
         self.db = db
-        self.slack_webhook_url = slack_webhook_url
+        self.slack_webhook_url = slack_webhook_url or os.getenv("SLACK_WEBHOOK_URL")
         self.intake_agent = create_intake_agent(llm)
         self.task_agent = create_task_agent(llm)
         self.decision_agent = create_decision_agent(llm)
@@ -451,7 +453,7 @@ class AIChiefOfStaffProcessor:
             # Serialize OutputSchema for Celery (JSON-only)
             job_data = {
                 "run_id": run_id,
-                "output": final_output.model_dump(),  # Pydantic v2 serialization
+                "output": final_output.model_dump(mode="json"),  # JSON-friendly serialization
                 "slack_webhook_url": self.slack_webhook_url
             }
 
