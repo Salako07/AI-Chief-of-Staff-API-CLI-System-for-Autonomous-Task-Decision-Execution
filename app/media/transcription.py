@@ -71,24 +71,33 @@ class WhisperTranscriber:
 
             # Open audio file and call Whisper API
             with open(audio_file_path, "rb") as audio_file:
-                # Build request parameters
+                # Build request parameters with quality enhancements
+                # Force English to prevent Welsh/foreign language hallucinations
+                # Use temperature=0.0 for deterministic, non-random output
+                # Add context prompt to guide transcription
                 params = {
                     "model": "whisper-1",
                     "file": audio_file,
-                    "temperature": temperature
+                    "language": language or "en",  # FORCE ENGLISH - prevents hallucinations
+                    "temperature": 0.0,  # Override parameter - deterministic output
+                    "prompt": prompt or "This is a business meeting or conversation in English discussing tasks, decisions, projects, and planning."  # Context hint
                 }
-
-                if language:
-                    params["language"] = language
-
-                if prompt:
-                    params["prompt"] = prompt
 
                 # Call Whisper API
                 response = self.client.audio.transcriptions.create(**params)
 
             # Extract transcription text
             transcription_text = response.text
+
+            # Validate transcription quality (detect hallucinations)
+            if not self._validate_transcription_quality(transcription_text):
+                logger.warning(f"Low quality transcription detected, may contain hallucinations")
+                raise Exception(
+                    "Transcription quality too low - possible hallucination detected. "
+                    "This often happens with poor audio quality, background noise, or very quiet recordings. "
+                    "Please ensure: 1) Clear audio with minimal background noise, "
+                    "2) Speaker is audible, 3) Recording is not silent/empty."
+                )
 
             logger.info(f"Transcription successful: {len(transcription_text)} characters")
 
@@ -97,6 +106,50 @@ class WhisperTranscriber:
                 "language": language or "auto",
                 "duration": None  # Whisper API doesn't return duration
             }
+
+    def _validate_transcription_quality(self, text: str) -> bool:
+        """
+        Check if transcription is valid or likely hallucinated.
+
+        Red flags for hallucinations:
+        - Too short (< 10 chars)
+        - Welsh repetition ("Iawn", "Helo", "Rwy'n")
+        - Too few unique words (repetitive)
+        - Excessive same word repetition
+
+        Returns:
+            bool: True if quality is acceptable, False if likely hallucination
+        """
+        if not text or len(text) < 10:
+            return False
+
+        # Check for Welsh hallucination keywords
+        welsh_keywords = ["Iawn", "Helo", "Rwy'n", "gobeithio", "bawb", "byddwn"]
+        welsh_count = sum(text.count(keyword) for keyword in welsh_keywords)
+        if welsh_count > 5:
+            logger.warning(f"Welsh hallucination detected (count: {welsh_count})")
+            return False
+
+        # Check for excessive repetition
+        words = text.split()
+        if len(words) > 20:
+            unique_words = len(set(words))
+            repetition_ratio = unique_words / len(words)
+            if repetition_ratio < 0.3:  # Less than 30% unique words
+                logger.warning(f"Excessive repetition detected (ratio: {repetition_ratio:.2f})")
+                return False
+
+        # Check for single word spam (e.g., "Iawn. Iawn. Iawn. Iawn...")
+        word_counts = {}
+        for word in words:
+            word_counts[word] = word_counts.get(word, 0) + 1
+
+        for word, count in word_counts.items():
+            if count > len(words) * 0.5:  # Single word is >50% of transcript
+                logger.warning(f"Single word spam detected: '{word}' repeated {count} times")
+                return False
+
+        return True
 
         except FileNotFoundError:
             logger.error(f"Audio file not found: {audio_file_path}")
