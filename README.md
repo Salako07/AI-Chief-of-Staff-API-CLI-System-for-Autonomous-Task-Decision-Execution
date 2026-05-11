@@ -1,4 +1,4 @@
-# AI Chief of Staff - Intelligent Task Management System
+# Intelligent Task Management System
 
 > Transform unstructured business communication into actionable tasks, decisions, and risk assessments using advanced AI agents.
 
