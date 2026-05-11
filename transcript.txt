@@ -1,0 +1,139 @@
+09:01 Priya: Morning everyone. Agenda: (1) ICU surge + oxygen issue, (2) HIMSS pilot readiness, (3) behavioral health backlog, (4) payer audits. Keep it tight—we’ve got the board walk-through at 10.
+
+09:02 Sarah: ICU occupancy hit 96% over the weekend. The portable oxygen manifolds we borrowed from MedSupply arrived, but biotech says one regulator is cracked. Respiratory therapy is using backup concentrators. We’re okay for 18 hours max. Purchasing is trying to get replacements but the vendor’s rep is “on vacation.”
+
+09:03 Miguel: Wait—are the concentrators on the emergency circuit? Facilities pinged me because breaker 3A tripped twice Sunday night.
+
+09:03 Sarah: Not sure. Facilities said they’re on the orange plugs, so yes? Can we confirm, though? If we blow that circuit, we lose four beds.
+
+09:04 Miguel: I’ll have facilities reroute them to the clean power strip before noon. Need a work order number though.
+
+09:04 Sarah: Already filed WO-18422. Reference that.
+
+09:05 Priya: Also, elective surgeries—do we postpone anything today to free up oxygen?
+
+09:05 Sarah: Anesthesiology wants to cancel two ortho cases after lunch. Dr. Mensah is furious but we can’t risk it. Need comms drafted to patients ASAP.
+
+09:06 Tessa: I’ll get patient relations to call those families within the hour. Please send me the MRNs so we don’t miss anyone.
+
+09:06 Sarah: Will do. They’re in the “Surgery Holds” spreadsheet.
+
+09:07 Priya: Next: HIMSS interoperability pilot. Miguel, where are we? The HRP data feed is still mapping wrong codes, right?
+
+09:07 Miguel: Yeah, the problem is the new Epic patch mislabeled SNOMED 68598001 as “Influenza vaccine” when it’s actually “pneumococcal.” We need a custom ruleset. Our vendor (BlueOak) promised a fix Friday but ghosted. I can hack a temporary translation table, but if we install it manually and then they push their patch, it could collide.
+
+09:08 Rachel: From compliance: we can’t transmit incorrect immunization codes to the state registry—state audit window opens May 1st. If we fudge it manually, we need documentation + rollback plan.
+
+09:09 Priya: What’s the minimal fix to keep the HIMSS demo alive? We present Thursday morning.
+
+09:09 Miguel: Option A: disable adult vaccine sync for 72 hours and only demo chronic disease dashboard. Option B: we write a mapping ourselves tonight with a hard-coded override and pray BlueOak doesn’t ship midweek.
+
+09:10 Priya: Pick B. We can’t show up at HIMSS with a crippled demo. Document the hack, Rachel gets the paper trail, and we yank it once BlueOak fixes their stuff. Miguel—deadline end of day tomorrow.
+
+09:10 Miguel: Got it. I’ll also ping their CTO on Signal to escalate.
+
+09:11 Rachel: Fine, but I need the mitigation doc in our compliance SharePoint by 4 p.m. tomorrow. Include who approved it.
+
+09:12 Priya: Next: Behavioral health backlog. Collins?
+
+09:12 Collins: We’ve got 182 patients queued for integrated psych consults, half of them oncology referrals. Our two nurse practitioners are burnt out. Telepsychiatry vendor CloudMind canceled weekend coverage because we didn’t renew the contract addendum. Procurement missed the signature deadline.
+
+09:13 Joy: That’s on my team—we got the contract Friday but legal flagged clause 4.2. I forwarded it to Rachel.
+
+09:13 Rachel: Right, CloudMind added language letting them reuse de-identified session transcripts for training. Legal said no. I sent them redlines; they haven’t responded.
+
+09:14 Priya: Meanwhile patients wait. Can we tap our in-house psych residents for tele consults temporarily?
+
+09:14 Collins: They can handle up to 20 slots/day, but they aren’t licensed in Minnesota, only Washington. Half our tele patients are in Minnesota.
+
+09:15 Sarah: Could we shift Minnesota patients to Dr. Okoro for this week only? She has dual licensure.
+
+09:15 Collins: She’s on PTO through Wednesday, remember?
+
+09:15 Priya: Okay, Joy draft an escalation email to CloudMind TODAY, copying me, demanding interim coverage or we’ll go to their competitor. Offer to extend the contract three months if they remove that clause. We need them back on-line by Friday.
+
+09:16 Joy: On it. I’ll send the escalation by 11, but I need Rachel’s sanitized language.
+
+09:16 Rachel: I’ll send template wording in 30 minutes.
+
+09:17 Priya: What about the backlog triage?
+
+09:17 Joy: Plan: split the 182 patients into three buckets—oncology urgent, primary-care routine, crisis follow-ups. I’ll get the list from Epic and have coordinators call the urgent ones today. Need extra call center coverage though.
+
+09:18 Tessa: I can reassign two patient experience reps to outbound calling this afternoon. Give me the script and disclaimers.
+
+09:18 Priya: Excellent. Next topic: payer audits. Devin?
+
+09:19 Devin: BlueShield flagged 27 claims from February for “medical necessity review”—mostly infusion therapy. They want response packets by Thursday or they’ll auto-deny. HIM coding didn’t attach the oncologist letters. We need someone to babysit the document packet.
+
+09:19 Priya: Joy, can care coordination pull the missing clinical notes?
+
+09:20 Joy: We can, but HIM said their queue is “frozen” until the new document management tool goes live. No clue what that means.
+
+09:20 Miguel: That’s on IT. The new tool, DocBridge, failed its pen test Friday because the vendor left the vendor portal open. We froze uploads until they patch. ETA Wednesday morning. I can temporarily re-enable the old ShareFile workflow if we sign a risk waiver.
+
+09:21 Rachel: Absolutely not. ShareFile lacks the necessary audit logs. If DocBridge is down, HIM must manually export PDFs from Epic. It’s clunky but compliant.
+
+09:21 Devin: Manual exports are slow. We need those 27 packets assembled by Wednesday 5 p.m., no excuses, or we burn $1.2M in revenue.
+
+09:22 Priya: Joy, assign two coordinators to sit with HIM and push those exports. Offer overtime. Devin, draft the prioritization list so they know which MRNs to pull first.
+
+09:22 Joy: OK. I’ll grab Aisha and Ben—they know Epic’s chart review inside out.
+
+09:23 Priya: While we’re on finances: Devin, any word on the CMS supplemental funding?
+
+09:23 Devin: CMS wants proof we actually deployed the remote monitoring devices we billed for. Supply chain says 14 kits are still sitting in receiving. If we don’t scan them into patient charts by Friday, CMS claws back the whole quarter’s payment.
+
+09:24 Sarah: Those kits were for chronic CHF patients. Home health nurses reported that three patients refused them because the straps irritated their skin. We need replacements.
+
+09:24 Priya: Get replacements, but also scan in the ones sitting in receiving TODAY. Even if they end up reallocated, CMS wants to see movement.
+
+09:25 Sarah: I’ll send a nurse to receiving at noon to sign them in and push them to the field teams. Need transport support though.
+
+09:25 Tessa: I can have courier services help. Ping me the addresses.
+
+09:26 Priya: Next: patient complaints. Tessa?
+
+09:26 Tessa: We had 12 MyChart complaints over the weekend about the new triage chatbot giving contradictory advice (“Call 911” + “Visit urgent care tomorrow” simultaneously). It’s the pilot we launched Friday night (without telling me, thanks Miguel). Patients are posting screenshots on Facebook.
+
+09:27 Miguel: Noted. The AI vendor (CarePulse) tweaked their risk scoring without updating our thresholds. I’ll revert the change and disable the symptom-checker until we review. ETA by 2 p.m.
+
+09:27 Rachel: Document the incident and send me a patient safety summary for the monthly QA report.
+
+09:28 Priya: Collins, anything else on behavioral health?
+
+09:28 Collins: Yes, psychiatry flagged that social workers can’t log into the new note template—permissions issue. They lost 18 progress notes on Saturday because the system said “insufficient privileges.” Needs fix before the state surveyor comes tomorrow.
+
+09:29 Miguel: That’s the same template we rolled out for palliative care. I’ll have our Epic analyst (Neal) adjust the security class today. Should take an hour once he’s online.
+
+09:29 Priya: Make it top priority, please.
+
+09:30 Devin: Quick finance add: pharmacy lost 30 doses of GLP-1 injectables because the fridge in clinic B spiked to 15°C on Sunday. That’s a $60k write-off unless we can prove they’re still stable. Facilities logs show the power flicker.
+
+09:30 Sarah: Was that the mini fridge by the nurse station? It always malfunctions. We need backup temperature strips.
+
+09:31 Priya: Document the loss, but see if the manufacturer will certify viability. Otherwise, file an insurance claim. Miguel, is facilities monitoring those sensors centrally?
+
+09:31 Miguel: Facilities data logger glitched. It’s on my list to integrate with the new BMS. For now, they’re manually exporting CSVs. I’ll ask them to set text alerts for anything >8°C.
+
+09:32 Priya: We’re running short on time. Rapid reminders:
+
+Sarah: finalize which surgeries are cancelled and confirm oxygen usage plan. Update me by 11.
+Miguel: custom mapping for HIMSS + chatbot rollback + permissions fix—send me a status summary end of day.
+Joy: CloudMind escalation + care coordination list + HIM exports.
+Rachel: compliance doc for the code override + template language.
+Tessa: patient comms + outbound calls.
+Devin: audit packet priority list + fridge incident documentation.
+Anything else urgent?
+
+09:33 Joy: Oh—Home health flagged that our bilingual call center hours changed silently in the IVR, so Spanish-speaking patients are getting routed to voicemail at 5 p.m. instead of 7. Can IT revert the schedule?
+
+09:33 Miguel: That was telecom’s auto-update. I’ll roll it back today and coordinate with vendor. Sorry.
+
+09:34 Priya: Please do. Patient safety first. Also board expects a summary slide on all this by tomorrow 8 a.m., so keep your notes detailed.
+
+09:35 Rachel: One more: OSHA inspection next week. Need proof we retrained staff on chemo spill kits. Last training was 2024.
+
+09:35 Sarah: I’ve got a refresher scheduled Thursday 1 p.m. but we only have 40 slots. Need to record it for asynchronous folks.
+
+09:36 Priya: Make it happen. Record and host on LMS. Done. Thanks everyone—slides to me by 6 p.m. if you want them in the board deck.

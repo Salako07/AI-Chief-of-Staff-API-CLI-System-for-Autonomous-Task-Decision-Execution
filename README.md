@@ -198,6 +198,25 @@ Risk: Sarah may not be available."
 }
 ```
 
+### Frontend Walkthrough
+Although the project ships with a powerful CLI, it also includes a demo frontend (see `webapp/`) so stakeholders can explore the extraction pipeline visually. Below are the key screens:
+
+1. **Transcript Intake** – Upload raw meeting notes, emails, or call transcripts and preview the parsed text before processing.
+
+   ![Transcript input screen](docs/assets/screenshots/input-transcript.png)
+
+2. **Task Extraction View** – Review generated tasks with owners, priorities, and due dates before syncing to Jira/Asana.
+
+   ![Tasks extracted UI](docs/assets/screenshots/task-extracted.png)
+
+3. **Decision & Risk Dashboard** – Visualizes strategic decisions alongside flagged risks and mitigation guidance.
+
+   ![Decisions and risks extracted UI](docs/assets/screenshots/decision-risk-extracted.png)
+
+4. **Processing Log** – Audit trail showing every background job, retry, and validation step for compliance teams.
+
+   ![Processing log UI](docs/assets/screenshots/log-screenshot.png)
+
 ---
 
 ## Quick Start
@@ -268,7 +287,7 @@ Your Message
     ↓
 [PostgreSQL Database] ← Saves results
     ↓
-Results Delivered
+Results Delivered to Slack
 ```
 
 **The System Components:**
@@ -331,7 +350,7 @@ AI-Chief-of-Staff/
 
 ### 🚧 Phase 3: Integrations (In Progress)
 - Jira/Asana connectors
-- Slack/Teams bots
+- Slack/Teams bots (Done ✅)
 - Email processing pipeline
 - Webhook support
 
@@ -412,12 +431,6 @@ We welcome contributions! Areas for improvement:
 - Integration plugins (Jira, Asana, Linear, etc.)
 - Performance optimizations
 - Documentation improvements
-
----
-
-## License
-
-[To be determined]
 
 ---
 

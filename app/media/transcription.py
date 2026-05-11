@@ -91,7 +91,7 @@ class WhisperTranscriber:
 
             # Validate transcription quality (detect hallucinations)
             if not self._validate_transcription_quality(transcription_text):
-                logger.warning(f"Low quality transcription detected, may contain hallucinations")
+                logger.warning("Low quality transcription detected, may contain hallucinations")
                 raise Exception(
                     "Transcription quality too low - possible hallucination detected. "
                     "This often happens with poor audio quality, background noise, or very quiet recordings. "
@@ -106,6 +106,14 @@ class WhisperTranscriber:
                 "language": language or "auto",
                 "duration": None  # Whisper API doesn't return duration
             }
+
+        except FileNotFoundError:
+            logger.error(f"Audio file not found: {audio_file_path}")
+            raise
+
+        except Exception as e:
+            logger.error(f"Transcription failed for {audio_file_path}: {str(e)}", exc_info=True)
+            raise Exception(f"Transcription failed: {str(e)}")
 
     def _validate_transcription_quality(self, text: str) -> bool:
         """
@@ -150,14 +158,6 @@ class WhisperTranscriber:
                 return False
 
         return True
-
-        except FileNotFoundError:
-            logger.error(f"Audio file not found: {audio_file_path}")
-            raise
-
-        except Exception as e:
-            logger.error(f"Transcription failed for {audio_file_path}: {str(e)}", exc_info=True)
-            raise Exception(f"Transcription failed: {str(e)}")
 
     def transcribe_with_timestamps(
         self,
