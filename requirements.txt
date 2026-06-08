@@ -19,3 +19,4 @@ pymongo>=4.6.0  # MongoDB (optional/future use)
 # Utilities
 python-dotenv>=1.0.0
 requests
+boto3>=1.34.0  # AWS SDK (compatible with DigitalOcean Spaces)

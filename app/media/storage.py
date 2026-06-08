@@ -54,6 +54,9 @@ class MediaStorage:
                 size_bytes BIGINT NOT NULL,
                 duration_seconds INTEGER,
                 status VARCHAR(50) NOT NULL CHECK(status IN ('uploaded', 'processing', 'completed', 'failed')),
+                spaces_key VARCHAR(500),
+                spaces_url TEXT,
+                storage_type VARCHAR(20) DEFAULT 'local' CHECK(storage_type IN ('local', 'spaces')),
                 created_at TIMESTAMPTZ DEFAULT NOW(),
                 updated_at TIMESTAMPTZ DEFAULT NOW()
             );
@@ -103,12 +106,16 @@ class MediaStorage:
         mime_type: str,
         size_bytes: int,
         duration_seconds: Optional[int] = None,
-        status: str = "uploaded"
+        status: str = "uploaded",
+        spaces_key: Optional[str] = None,
+        spaces_url: Optional[str] = None,
+        storage_type: str = "local"
     ) -> Dict[str, Any]:
         query = """
             INSERT INTO media_files (
-                id, filename, original_path, mime_type, size_bytes, duration_seconds, status
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                id, filename, original_path, mime_type, size_bytes, duration_seconds,
+                status, spaces_key, spaces_url, storage_type
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING *;
         """
 
@@ -119,7 +126,10 @@ class MediaStorage:
             mime_type,
             size_bytes,
             duration_seconds,
-            status
+            status,
+            spaces_key,
+            spaces_url,
+            storage_type
         )
 
         with self._get_cursor() as cursor:

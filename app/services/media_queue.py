@@ -35,21 +35,25 @@ def transcribe_media_task(
     Celery task to transcribe media file and process through AI pipeline.
 
     This task:
-    1. Checks if file is video → extracts audio with FFmpeg
-    2. Transcribes audio using OpenAI Whisper API
-    3. Processes transcription through AI Chief of Staff pipeline
-    4. Updates job status and results
+    1. Downloads file from Spaces (if cloud storage) or uses local path
+    2. Checks if file is video → extracts audio with FFmpeg
+    3. Transcribes audio using OpenAI Whisper API
+    4. Processes transcription through AI Chief of Staff pipeline
+    5. Cleans up temporary files
+    6. Updates job status and results
 
     Args:
         job_id: Transcription job ID
         media_id: Media file ID
-        file_path: Path to uploaded media file
+        file_path: Path to uploaded media file OR Spaces key (if storage_type='spaces')
         language: Optional language code for transcription
 
     Returns:
         Dictionary with job results
     """
     start_time = time.time()
+    local_video_path = None
+    local_audio_path = None
 
     try:
         logger.info(f"[MEDIA_WORKER] Starting transcription job: {job_id} (media_id={media_id})")
@@ -61,20 +65,63 @@ def transcribe_media_task(
         storage.update_transcription_job(job_id, status="processing", progress=10, started_at=datetime.utcnow())
 
         media_file = storage.get_media_file(media_id)
-        audio_file_path = file_path
+        if not media_file:
+            raise Exception(f"Media file not found: {media_id}")
 
+        storage_type = media_file.get("storage_type", "local")
+
+        # Step 1: Download from Spaces if needed
+        if storage_type == "spaces":
+            logger.info(f"[MEDIA_WORKER] Downloading from Spaces: {file_path}")
+
+            from app.media.spaces_client import get_spaces_client
+            spaces_client = get_spaces_client()
+
+            # Create temp directory for downloads
+            temp_dir = os.path.join("/tmp", "media_downloads")
+            os.makedirs(temp_dir, exist_ok=True)
+
+            # Download to temp file
+            local_video_path = os.path.join(temp_dir, f"{media_id}_{media_file['filename']}")
+            spaces_client.download_file(
+                remote_key=file_path,  # file_path is actually spaces_key
+                local_path=local_video_path
+            )
+
+            logger.info(f"[MEDIA_WORKER] Download complete: {local_video_path}")
+            storage.update_transcription_job(job_id, progress=20)
+
+            # Use downloaded file for processing
+            audio_file_path = local_video_path
+        else:
+            # Local storage - use file path directly
+            local_video_path = file_path
+            audio_file_path = file_path
+
+        # Step 2: Extract audio if video file
         if media_file and media_file["mime_type"].startswith("video/"):
-            logger.info(f"[MEDIA_WORKER] Video detected, extracting audio: {file_path}")
+            logger.info(f"[MEDIA_WORKER] Video detected, extracting audio: {local_video_path}")
 
             processor = MediaProcessor()
-            audio_file_path = processor.extract_audio(
-                input_path=file_path,
+            local_audio_path = processor.extract_audio(
+                input_path=local_video_path,
                 output_path=None,  # Auto-generate
                 format="mp3",
                 bitrate="192k"
             )
 
-            logger.info(f"[MEDIA_WORKER] Audio extracted: {audio_file_path}")
+            logger.info(f"[MEDIA_WORKER] Audio extracted: {local_audio_path}")
+            audio_file_path = local_audio_path
+            storage.update_transcription_job(job_id, progress=40)
+
+            # Cleanup video file if downloaded from Spaces
+            if storage_type == "spaces" and local_video_path and os.path.exists(local_video_path):
+                try:
+                    os.remove(local_video_path)
+                    logger.info(f"[MEDIA_WORKER] Cleaned up temp video file: {local_video_path}")
+                except Exception as cleanup_err:
+                    logger.warning(f"[MEDIA_WORKER] Failed to cleanup video: {cleanup_err}")
+        else:
             storage.update_transcription_job(job_id, progress=30)
 
         # Step 2: Transcribe audio using Whisper
@@ -129,6 +176,14 @@ def transcribe_media_task(
         if media_file:
             storage.update_media_file(media_id, status="completed")
 
+        # Cleanup local audio file
+        if local_audio_path and os.path.exists(local_audio_path):
+            try:
+                os.remove(local_audio_path)
+                logger.info(f"[MEDIA_WORKER] Cleaned up temp audio file: {local_audio_path}")
+            except Exception as cleanup_err:
+                logger.warning(f"[MEDIA_WORKER] Failed to cleanup audio: {cleanup_err}")
+
         logger.info(
             f"[MEDIA_WORKER] Job completed: {job_id} "
             f"({len(ai_result.get('tasks', []))} tasks, {len(ai_result.get('decisions', []))} decisions, "
@@ -146,6 +201,15 @@ def transcribe_media_task(
     except Exception as e:
         error_msg = str(e)
         logger.error(f"[MEDIA_WORKER] Job failed: {job_id} - {error_msg}", exc_info=True)
+
+        # Cleanup temp files on error
+        for temp_path in [local_video_path, local_audio_path]:
+            if temp_path and os.path.exists(temp_path):
+                try:
+                    os.remove(temp_path)
+                    logger.info(f"[MEDIA_WORKER] Cleaned up temp file on error: {temp_path}")
+                except Exception as cleanup_err:
+                    logger.warning(f"[MEDIA_WORKER] Failed to cleanup {temp_path}: {cleanup_err}")
 
         processing_time_ms = int((time.time() - start_time) * 1000)
         try:
@@ -170,41 +234,86 @@ def cleanup_old_media_files(days_old: int = 7) -> Dict:
     Celery task to clean up old media files (scheduled task).
 
     Deletes media files and transcription jobs older than `days_old` days.
+    For Spaces-hosted files, deletes from both cloud storage and database.
 
     Args:
-        days_old: Number of days to keep files (default: 7)
+        days_old: Number of days to keep files (default: 7, configurable via SPACES_RETENTION_DAYS env var)
 
     Returns:
         Dictionary with cleanup statistics
     """
     try:
-        logger.info(f"[MEDIA_CLEANUP] Starting cleanup of files older than {days_old} days")
+        # Use retention days from env var if available
+        retention_days = int(os.getenv("SPACES_RETENTION_DAYS", days_old))
+        logger.info(f"[MEDIA_CLEANUP] Starting cleanup of files older than {retention_days} days")
 
-        deleted_files = 0
+        deleted_files_local = 0
+        deleted_files_spaces = 0
         deleted_jobs = 0
+        spaces_errors = 0
 
-        old_files = storage.delete_old_media_files(days_old)
+        # Initialize Spaces client (may fail if not configured)
+        try:
+            from app.media.spaces_client import get_spaces_client
+            spaces_client = get_spaces_client()
+            spaces_available = True
+        except Exception as spaces_init_err:
+            logger.warning(f"[MEDIA_CLEANUP] Spaces client not available: {spaces_init_err}")
+            spaces_available = False
+
+        # Get old files before deletion
+        old_files = storage.delete_old_media_files(retention_days)
+
         for row in old_files:
             file_path = row.get("original_path")
-            if file_path and os.path.exists(file_path):
-                try:
-                    os.remove(file_path)
-                    logger.info(f"[MEDIA_CLEANUP] Deleted file from disk: {file_path}")
-                except OSError as fs_err:
-                    logger.warning(f"[MEDIA_CLEANUP] Failed to delete {file_path}: {fs_err}")
-            deleted_files += 1
+            media_id = row.get("id")
 
-        deleted_jobs = len(storage.delete_old_transcription_jobs(days_old))
+            # Get full media record to check storage type
+            try:
+                media_record = storage.get_media_file(media_id) if media_id else None
+            except:
+                media_record = None
+
+            # Determine storage type
+            storage_type = media_record.get("storage_type", "local") if media_record else "local"
+
+            if storage_type == "spaces" and spaces_available:
+                # Delete from Spaces
+                spaces_key = media_record.get("spaces_key") if media_record else None
+                if spaces_key:
+                    try:
+                        spaces_client.delete_file(spaces_key)
+                        logger.info(f"[MEDIA_CLEANUP] Deleted from Spaces: {spaces_key}")
+                        deleted_files_spaces += 1
+                    except Exception as spaces_err:
+                        logger.error(f"[MEDIA_CLEANUP] Failed to delete from Spaces {spaces_key}: {spaces_err}")
+                        spaces_errors += 1
+            else:
+                # Delete from local disk
+                if file_path and os.path.exists(file_path):
+                    try:
+                        os.remove(file_path)
+                        logger.info(f"[MEDIA_CLEANUP] Deleted from disk: {file_path}")
+                        deleted_files_local += 1
+                    except OSError as fs_err:
+                        logger.warning(f"[MEDIA_CLEANUP] Failed to delete {file_path}: {fs_err}")
+
+        # Delete old transcription jobs
+        deleted_jobs = len(storage.delete_old_transcription_jobs(retention_days))
 
         logger.info(
-            f"[MEDIA_CLEANUP] Cleanup complete: {deleted_files} files, {deleted_jobs} jobs deleted"
+            f"[MEDIA_CLEANUP] Cleanup complete: {deleted_files_local} local files, "
+            f"{deleted_files_spaces} Spaces files, {deleted_jobs} jobs deleted "
+            f"({spaces_errors} errors)"
         )
 
         return {
             "status": "completed",
-            "deleted_files": deleted_files,
+            "deleted_files_local": deleted_files_local,
+            "deleted_files_spaces": deleted_files_spaces,
             "deleted_jobs": deleted_jobs,
-            "cutoff_days": days_old
+            "spaces_errors": spaces_errors,
+            "cutoff_days": retention_days
         }
 
     except Exception as e:

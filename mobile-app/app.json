@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "AI Chief of Staff",
+    "slug": "ai-chief-of-staff",
+    "version": "1.0.0",
+    "experiments": {
+      "reactCompiler": true
+    },
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#000000",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.aichiefofstaff.mobile",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app needs access to camera to record videos for AI processing.",
+        "NSMicrophoneUsageDescription": "This app needs access to microphone to record audio during meetings and calls.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to photo library to select videos for upload.",
+        "NSPhotoLibraryAddUsageDescription": "This app saves processed videos to your photo library.",
+        "UIBackgroundModes": ["audio"]
+      }
+    },
+    "android": {
+      "package": "com.aichiefofstaff.mobile",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MICROPHONE",
+        "android.permission.READ_PHONE_STATE"
+      ]
+    }
+  }
+}

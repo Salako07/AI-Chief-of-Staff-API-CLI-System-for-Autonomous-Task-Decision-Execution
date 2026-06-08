@@ -290,6 +290,40 @@ Your Message
 Results Delivered to Slack
 ```
 
+### System Architecture Diagram
+```mermaid
+graph LR
+    subgraph Client Tier
+        A[CLI / Meeting Platorm e.g zoom]
+    end
+    subgraph Platform Edge
+        B[FastAPI Gateway]
+    end
+    subgraph Async Core
+        C[Redis Queue]
+        D[Background Worker Pool]
+        E[AI Agent Orchestrator]
+    end
+    subgraph Data Layer
+        F[(PostgreSQL)]
+        G[(Media Uploads)]
+    end
+    subgraph Observability
+        H[Flower Dashboard]
+        I[Structured Logs]
+    end
+
+    A -->|REST/WS| B
+    B -->|enqueue job| C
+    C --> D
+    D --> E
+    E -->|persist results| F
+    E -->|store artifacts| G
+    D -->|emit metrics| H
+    D -->|emit logs| I
+    H -->|operator controls| D
+```
+
 **The System Components:**
 
 - **API Server** - The front door where you send requests

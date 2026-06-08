@@ -64,12 +64,7 @@ export default function UploadPage() {
       return;
     }
 
-    // Validate file size (100MB max)
-    const maxSize = 100 * 1024 * 1024;
-    if (file.size > maxSize) {
-      setError('File too large. Maximum size is 100MB.');
-      return;
-    }
+    // No file size limit - accept any size
 
     setSelectedFile(file);
     setError(null);
@@ -328,7 +323,7 @@ export default function UploadPage() {
                       Choose File
                     </Button>
                     <p className="text-sm text-gray-600 mt-4">
-                      Supports: MP3, WAV, M4A, OGG, MP4, MOV, AVI (max 100MB)
+                      Supports: MP3, WAV, M4A, OGG, MP4, MOV, AVI (unlimited size)
                     </p>
                   </>
                 ) : (

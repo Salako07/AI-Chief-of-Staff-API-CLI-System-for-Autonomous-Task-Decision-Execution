@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Navigation } from "@/components/Navigation";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,7 +15,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "AI Chief of Staff - Transform Conversations into Action",
-  description: "AI-powered task extraction, decision tracking, and risk assessment. Built for developers, recruiters, and business owners.",
+  description: "AI-powered task extraction, decision tracking, and risk assessment from videos, audio, and text. Built for modern teams.",
+  keywords: "AI, task extraction, video transcription, meeting notes, decision tracking, risk assessment",
 };
 
 export default function RootLayout({
@@ -27,7 +29,10 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col bg-black text-white">
+        <Navigation />
+        <main className="flex-1">{children}</main>
+      </body>
     </html>
   );
 }
