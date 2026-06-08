@@ -117,6 +117,9 @@ CREATE TABLE IF NOT EXISTS media_files (
     size_bytes BIGINT NOT NULL,
     duration_seconds INTEGER,
     status VARCHAR(50) NOT NULL CHECK(status IN ('uploaded', 'processing', 'completed', 'failed')),
+    spaces_key VARCHAR(500),
+    spaces_url TEXT,
+    storage_type VARCHAR(20) DEFAULT 'local',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
