@@ -6,6 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import router
 from app.media.routes import router as media_router
 import logging
+import os
+import psycopg2
 
 # Configure logging
 logging.basicConfig(
@@ -47,10 +49,38 @@ def read_root():
         "health": "/api/v1/health"
     }
 
+def run_migrations() -> None:
+    """Run init_db.sql on startup — safe to run multiple times (all IF NOT EXISTS)."""
+    database_url = os.getenv("DATABASE_URL")
+    if not database_url:
+        logger.warning("⚠️ DATABASE_URL not set — skipping migrations")
+        return
+
+    sql_path = os.path.join(os.path.dirname(__file__), "..", "..", "init_db.sql")
+    sql_path = os.path.abspath(sql_path)
+
+    if not os.path.exists(sql_path):
+        logger.warning(f"⚠️ init_db.sql not found at {sql_path} — skipping migrations")
+        return
+
+    try:
+        with open(sql_path, "r") as f:
+            sql = f.read()
+        conn = psycopg2.connect(database_url)
+        conn.autocommit = True
+        with conn.cursor() as cur:
+            cur.execute(sql)
+        conn.close()
+        logger.info("✅ Database migrations applied (init_db.sql)")
+    except Exception as e:
+        logger.error(f"❌ Migration failed: {e}")
+
+
 # Startup event
 @app.on_event("startup")
 async def startup_event():
     logger.info("🚀 AI Chief of Staff API starting up...")
+    run_migrations()
 
     # Initialize the processor
     try:
