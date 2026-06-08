@@ -47,7 +47,7 @@ services:
       - "8000:8000"
     environment:
       # Database
-      DATABASE_URL: postgresql://ai_chief_user:${POSTGRES_PASSWORD:-change_me_in_production}@postgres:5432/ai_chief_of_staff
+      DATABASE_URL: postgresql://${POSTGRES_USER:-ai_chief_user}:${POSTGRES_PASSWORD:-change_me_in_production}@postgres:5432/${POSTGRES_DB:-ai_chief_of_staff}
 
       # Redis
       REDIS_URL: redis://:${REDIS_PASSWORD:-redis_password}@redis:6379/0
@@ -94,7 +94,7 @@ services:
       dockerfile: Dockerfile
     environment:
       # Database
-      DATABASE_URL: postgresql://ai_chief_user:${POSTGRES_PASSWORD:-change_me_in_production}@postgres:5432/ai_chief_of_staff
+      DATABASE_URL: postgresql://${POSTGRES_USER:-ai_chief_user}:${POSTGRES_PASSWORD:-change_me_in_production}@postgres:5432/${POSTGRES_DB:-ai_chief_of_staff}
 
       # Redis
       REDIS_URL: redis://:${REDIS_PASSWORD:-redis_password}@redis:6379/0
@@ -144,7 +144,7 @@ services:
     environment:
       CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-redis_password}@redis:6379/0
       CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-redis_password}@redis:6379/0
-      DATABASE_URL: postgresql://ai_chief_user:${POSTGRES_PASSWORD:-change_me_in_production}@postgres:5432/ai_chief_of_staff
+      DATABASE_URL: postgresql://${POSTGRES_USER:-ai_chief_user}:${POSTGRES_PASSWORD:-change_me_in_production}@postgres:5432/${POSTGRES_DB:-ai_chief_of_staff}
     depends_on:
       redis:
         condition: service_healthy

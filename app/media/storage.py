@@ -17,10 +17,9 @@ class MediaStorage:
     """Wrapper around PostgreSQL for media + transcription persistence."""
 
     def __init__(self, database_url: Optional[str] = None, minconn: int = 1, maxconn: int = 10):
-        self.database_url = database_url or os.getenv(
-            "DATABASE_URL",
-            "postgresql://ai_chief_user:change_me_in_production@localhost:5432/ai_chief_of_staff"
-        )
+        self.database_url = database_url or os.getenv("DATABASE_URL") or self._build_url_from_parts()
+        if not self.database_url:
+            self.database_url = "postgresql://ai_chief_user:change_me_in_production@localhost:5432/ai_chief_of_staff"
 
         try:
             self.pool = SimpleConnectionPool(minconn, maxconn, dsn=self.database_url)
@@ -29,6 +28,17 @@ class MediaStorage:
         except Exception as exc:
             logger.error(f"[MEDIA_STORAGE] Failed to initialize connection pool: {exc}")
             raise
+
+    @staticmethod
+    def _build_url_from_parts() -> Optional[str]:
+        user = os.getenv("POSTGRES_USER")
+        password = os.getenv("POSTGRES_PASSWORD")
+        host = os.getenv("POSTGRES_HOST", "localhost")
+        port = os.getenv("POSTGRES_PORT", "5432")
+        db = os.getenv("POSTGRES_DB")
+        if user and password and db:
+            return f"postgresql://{user}:{password}@{host}:{port}/{db}"
+        return None
 
     @contextmanager
     def _get_cursor(self):
