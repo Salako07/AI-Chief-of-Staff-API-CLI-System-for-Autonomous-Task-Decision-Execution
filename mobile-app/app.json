@@ -17,7 +17,9 @@
         "NSMicrophoneUsageDescription": "This app needs access to microphone to record audio during meetings and calls.",
         "NSPhotoLibraryUsageDescription": "This app needs access to photo library to select videos for upload.",
         "NSPhotoLibraryAddUsageDescription": "This app saves processed videos to your photo library.",
-        "UIBackgroundModes": ["audio"]
+        "UIBackgroundModes": [
+          "audio"
+        ]
       }
     },
     "android": {
@@ -31,6 +33,11 @@
         "android.permission.FOREGROUND_SERVICE_MICROPHONE",
         "android.permission.READ_PHONE_STATE"
       ]
+    },
+    "extra": {
+      "eas": {
+        "projectId": "8cd3d973-2e33-40f7-adff-48348d5fedbe"
+      }
     }
   }
 }

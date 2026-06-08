@@ -20,14 +20,25 @@ class MediaStorage:
         self.database_url = database_url or os.getenv("DATABASE_URL") or self._build_url_from_parts()
         if not self.database_url:
             self.database_url = "postgresql://ai_chief_user:change_me_in_production@localhost:5432/ai_chief_of_staff"
+        self._minconn = minconn
+        self._maxconn = maxconn
+        self.pool: Optional[SimpleConnectionPool] = None
+        self._connect()
 
+    def _connect(self) -> None:
         try:
-            self.pool = SimpleConnectionPool(minconn, maxconn, dsn=self.database_url)
+            self.pool = SimpleConnectionPool(self._minconn, self._maxconn, dsn=self.database_url)
             logger.info("[MEDIA_STORAGE] Connection pool initialized")
             self._ensure_tables()
         except Exception as exc:
-            logger.error(f"[MEDIA_STORAGE] Failed to initialize connection pool: {exc}")
-            raise
+            logger.error(f"[MEDIA_STORAGE] DB not available at startup (will retry on first request): {exc}")
+            self.pool = None
+
+    def _ensure_connected(self) -> None:
+        if self.pool is None:
+            self._connect()
+        if self.pool is None:
+            raise RuntimeError("Database unavailable. Check DATABASE_URL and ensure the database is running.")
 
     @staticmethod
     def _build_url_from_parts() -> Optional[str]:
@@ -42,6 +53,7 @@ class MediaStorage:
 
     @contextmanager
     def _get_cursor(self):
+        self._ensure_connected()
         conn = self.pool.getconn()
         try:
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:

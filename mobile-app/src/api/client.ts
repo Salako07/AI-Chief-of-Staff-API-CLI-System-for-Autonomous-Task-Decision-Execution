@@ -4,12 +4,7 @@ import axios, {AxiosInstance, AxiosRequestConfig, AxiosError} from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {ApiError} from '@/types/api';
 
-// API Base URL - Updated for iPhone testing
-// Your computer's IP: 172.20.10.2 (from Wi-Fi adapter)
-// Make sure your iPhone is on the same Wi-Fi network
-const API_BASE_URL = __DEV__
-  ? 'http://172.20.10.2:8000' // Your computer's IP for real device testing
-  : 'https://api.yourcompany.com'; // Production
+const API_BASE_URL = 'https://ai-chief-of-staff-api-cli-system-for.onrender.com';
 
 // Storage keys
 const TOKEN_KEY = '@ai_chief_token';
@@ -22,7 +17,7 @@ class APIClient {
   constructor() {
     this.client = axios.create({
       baseURL: API_BASE_URL,
-      timeout: 30000, // 30 seconds
+      timeout: 60000, // 60 seconds — allows for Render cold start
       headers: {
         'Content-Type': 'application/json',
       },
